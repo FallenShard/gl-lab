@@ -6,6 +6,8 @@
 #include "GL\glut.h"
 #include "DIB.h"
 
+#include <cmath>
+
 float rad(float degree)
 {
     return degree * 3.141593f / 180;
@@ -67,8 +69,7 @@ void CGLRenderer::PrepareScene(CDC *pDC)
     glCullFace(GL_BACK);    // Face to be culled is back-face
     glFrontFace(GL_CCW);    // Front faces are wound in CCW manner
 
-
-    glEnable(GL_DEPTH_TEST);    // Enable depth drawing
+	glEnable(GL_DEPTH_TEST);    // Enable depth drawing
     glDepthFunc(GL_LEQUAL);     // Depth function is <=, that is draw over the buffer if incoming pixel (fragment) is less than or equal to the buffer
     glDepthRange(0.0f, 1.f);    // Normalized depth range
     glDepthMask(GL_TRUE);       // Enables writing into the depth buffer
@@ -93,7 +94,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
     glRotatef(alphaX, 0.f, 1.f, 0.f);           // Rotate the scene around X, on key-press
     glRotatef(alphaY, 1.f, 0.f, 0.f);           // Rotate the scene around Y, on key-press
 
-
+	
     if (polygonMode)            // Debug purposes only, activate/deactivate on space
     {
         glDisable(GL_CULL_FACE);                    // We want everything drawn, disable culling
@@ -126,7 +127,7 @@ void CGLRenderer::Reshape(CDC *pDC, int w, int h)
     glViewport(0, 0, w, h);         // If reshaped, we want to draw to the whole screen again, set viewport
     glMatrixMode(GL_PROJECTION);    // Alter the projection matrix with new width/height
     glLoadIdentity();               // Load identity first
-    gluPerspective(45, (double)w / h, 1, 100);  // Set the perspective matrix
+    gluPerspective(45, (double)w / h, 0.1, 150);  // Set the perspective matrix
     glMatrixMode(GL_MODELVIEW);     // Go to MODELVIEW mode and alter it during drawing..
     //---------------------------------
     wglMakeCurrent(NULL, NULL);
@@ -172,10 +173,12 @@ bool CGLRenderer::onKeyDown(UINT nChar)
 
     case 'W':
         basePitch += 3.f;
+		if (basePitch > 80.f) basePitch = 80.f;
         break;
 
     case 'S':
         basePitch -= 3.f;
+		if (basePitch < -80.f) basePitch = -80.f;
         break;
 
     case 'A':
@@ -252,28 +255,31 @@ void CGLRenderer::DrawWall(double a)
 
 void CGLRenderer::DrawWalls()
 {
+	glDisable(GL_CULL_FACE);
     glPushMatrix();                             // Save the current matrix
-        glTranslatef(-20.f, 20.f - 12.4f, 0.f); // Rotate, then translate the wall ("left" wall)
+        glTranslatef(-20.f, 50.f - 12.4f, 30.f); // Rotate, then translate the wall ("left" wall)
         glRotatef(-90, 0.f, 0.f, 1.f);
 
         glColor3f(0.6f, 0.6f, 0.6f);            // Colorize and draw
-        DrawWall(40);
+        DrawWall(100);
     glPopMatrix();                              // Restore previous matrix state
 
     glPushMatrix();
-        glTranslatef(0, -12.4f, 0.f);           // This wall is actually the floor
+        glTranslatef(30, -12.4f, 30.f);           // This wall is actually the floor
 
         glColor3f(0.3f, 0.3f, 0.3f);
-        DrawWall(40);
+        DrawWall(100);
     glPopMatrix();
 
     glPushMatrix();
-        glTranslatef(0.f, 20.f - 12.4f, -20.f); // This wall is the "back" wall
+        glTranslatef(30.f, 50.f - 12.4f, -20.f); // This wall is the "back" wall
         glRotatef(90, 1.f, 0.f, 0.f);
 
         glColor3f(0.8f, 0.8f, 0.8f);
-        DrawWall(40);
+        DrawWall(100);
     glPopMatrix();
+
+	glEnable(GL_CULL_FACE);
 }
 
 void CGLRenderer::DrawTable()
@@ -330,15 +336,21 @@ void CGLRenderer::DrawLamp()
     glPushMatrix();                     // This one's for fun, the teapot
         glTranslatef(5.f, 2.f, 0.f); 
 
-        glColor3f(1.f, 1.f, 0.f);    
+        glColor3f(1.f, 0.3f, 0.f);    
         glutSolidTeapot(2.f);        
     glPopMatrix();
 
     glPushMatrix();                     // Save the state
         glTranslatef(-4.f, 0.f, 0.f);   // Position the spherical base
 
+		glEnable(GL_CLIP_PLANE0);
+		GLdouble cp[4] = { 0.f, 1.f, 0.f, 0.f };
+		glClipPlane(GL_CLIP_PLANE0, cp);
+
         glColor3f(1.f, 0.f, 0.f);       // Red color
         glutSolidSphere(1.f, 12, 12);
+
+		glDisable(GL_CLIP_PLANE0);
 
         // First red arm
         glRotatef(baseYaw, 0.f, 1.f, 0.f);      // Rotate around Y
@@ -390,31 +402,54 @@ void CGLRenderer::DrawLampTop()
     // Move to the other end of the blue box part
         glTranslatef(0.f, 1.5f, 0.f);
         // Okay, we gotta save that end
-            glPushMatrix();
-                glTranslatef(0.f, 0.2f, 0.f);   // Draw the first inset ring
-                glScalef(1.f, -1.f, 1.f);
 
-                glColor3f(0.f, 0.f, 1.f);       // Blue color
-                // Since the next part includes drawing both sides, we need to disable culling
-                glDisable(GL_CULL_FACE);
-                DrawRing(0.4, 1, 12, 0.5);
+			glPushMatrix();
+			glColor3f(1.f, 0.5f, .5f);
+			glEnable(GL_CLIP_PLANE0);
+			
+			
+			glTranslatef(0.f, 1.f, 0.f);
+			glRotatef(180, 1.f, 0.f, 0.f);
+			glColor3f(1.f, 0.f, 0.f);       // Red color
 
-            glPopMatrix();  // Restore the matrix back to the end of blue box part
+			GLdouble cp[4] = { 0.f, 2.f, 0.f, 0.f };
+			glClipPlane(GL_CLIP_PLANE0, cp);
 
-            glPushMatrix(); // Draw the next ring
-                glTranslatef(0.f, 0.4 + 0.3, 0.f);
-                glScalef(1.f, -1.f, 1.f);
+			glutSolidSphere(1.3f, 12, 12);
 
-                DrawRing(0.6, 1.2, 12, 0.2);
-            glPopMatrix();
+			glColor3f(1.f, 1.f, 0.f);
+			glCullFace(GL_FRONT);    // Face to be culled is back-face
+			glutSolidSphere(1.3f, 12, 12);
+			glCullFace(GL_BACK);    // Face to be culled is back-face
 
-            glPushMatrix();
-                glTranslatef(0.f, 1.0f + .3f, 0.f);
-                glScalef(1.f, -1.f, 1.f);
+			glDisable(GL_CLIP_PLANE0);
+			glPopMatrix();
 
-                DrawRing(0.6, 1.2, 12);
-                glEnable(GL_CULL_FACE);
-            glPopMatrix();
+            //glPushMatrix();
+            //    glTranslatef(0.f, 0.2f, 0.f);   // Draw the first inset ring
+            //    glScalef(1.f, -1.f, 1.f);
+
+            //    glColor3f(0.f, 0.f, 1.f);       // Blue color
+            //    // Since the next part includes drawing both sides, we need to disable culling
+            //    glDisable(GL_CULL_FACE);
+            //    DrawRing(0.4, 1, 12, 0.5);
+
+            //glPopMatrix();  // Restore the matrix back to the end of blue box part
+
+            //glPushMatrix(); // Draw the next ring
+            //    glTranslatef(0.f, 0.4 + 0.3, 0.f);
+            //    glScalef(1.f, -1.f, 1.f);
+
+            //    DrawRing(0.6, 1.2, 12, 0.2);
+            //glPopMatrix();
+
+            //glPushMatrix();
+            //    glTranslatef(0.f, 1.0f + .3f, 0.f);
+            //    glScalef(1.f, -1.f, 1.f);
+
+            //    DrawRing(0.6, 1.2, 12);
+            //    glEnable(GL_CULL_FACE);
+            //glPopMatrix();
     glPopMatrix();
 }
 
