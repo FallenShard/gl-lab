@@ -1,11 +1,20 @@
 #pragma once;
 
-typedef struct
+struct vec3
 {
     float x;
     float y;
     float z;
-} vec3;
+
+    vec3(float x, float y, float z)
+    {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    }
+
+    vec3() {}
+};
 
 typedef struct
 {

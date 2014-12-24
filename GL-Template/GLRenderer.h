@@ -15,6 +15,9 @@ public:
     void DestroyScene(CDC* pDC);			// dealocira resurse alocirane u drugim funkcijama ove klase,
 
     bool onKeyDown(UINT nChar);
+    bool onMouseMove(int x, int y);
+    bool onRMouseDown();
+    bool onRMouseUp();
 
 
 
@@ -23,12 +26,28 @@ protected:
 
     void DrawBox(double a, double b, double c);
     void DrawTable();
+
+    void SetLightModel();
+    void SetBulbLight();
+
+    void CreateWall(double a);
     void DrawWall(double a);
     void DrawWalls();
     void DrawLamp();
     void DrawLampTop();
     void DrawPyramid(double height);
     void DrawRing(double height, double radius, double steps, double topOffset = 0.f);
+
+    void DrawTessQuad(double a, double b, int factor);
+
+    void SetRedMaterial();
+    void SetWallMaterial();
+    void SetBulbMaterial();
+    void SetWoodMaterial();
+    void SetPorcelainMaterial();
+
+    void SetFreeLook(bool enabled);
+    void AdjustYawPitch(int x, int y);
 
 
     

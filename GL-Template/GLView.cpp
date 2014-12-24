@@ -30,6 +30,9 @@ BEGIN_MESSAGE_MAP(CGLView, CView)
     ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
     ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
     ON_WM_KEYDOWN()
+    ON_WM_MOUSEMOVE()
+    ON_WM_RBUTTONDOWN()
+    ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,4 +165,28 @@ void CGLView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         Invalidate();
 
     CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+void CGLView::OnMouseMove(UINT nFlags, CPoint point)
+{
+    // TODO: Add your message handler code here and/or call default
+
+    CView::OnMouseMove(nFlags, point);
+}
+
+
+void CGLView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+    // TODO: Add your message handler code here and/or call default
+
+    CView::OnRButtonDown(nFlags, point);
+}
+
+
+void CGLView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+    // TODO: Add your message handler code here and/or call default
+
+    CView::OnRButtonUp(nFlags, point);
 }
