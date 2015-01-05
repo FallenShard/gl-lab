@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DIB.cpp" />
+    <ClCompile Include="DImage.cpp" />
     <ClCompile Include="GL.cpp" />
     <ClCompile Include="GLDoc.cpp" />
     <ClCompile Include="GLRenderer.cpp" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DIB.h" />
+    <ClInclude Include="DImage.h" />
     <ClInclude Include="GL.h" />
     <ClInclude Include="GLDoc.h" />
     <ClInclude Include="GLRenderer.h" />

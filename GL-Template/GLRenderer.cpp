@@ -10,6 +10,8 @@
 
 #include <vector>
 
+#include "DImage.h"
+
 namespace
 {
     float rad(float degree)
@@ -29,22 +31,41 @@ namespace
     float armPitch = -90.f; // Rotation of the arm around X axis
     float headYaw = -50.f; // Rotation of the head around Y axis
 
-    const int tessFactor = 100;
+    const int tessFactor = 200;
     vec3 wall[tessFactor + 1][tessFactor + 1];
 
 
     bool freeLook = false;
 
     const float lookSpeed = 100.f;
+
+    float texelDensity = 8.f;
+
+
+    GLuint texId[3];
+
+    enum TexId {
+        Wood,
+        Wall,
+        Floor
+    };
+
+    DImage* g_textures = nullptr;
 }
 
 
 CGLRenderer::CGLRenderer(void)
 {
+    g_textures = new DImage[3];
+
+    g_textures[Wood].Load(CString("ASHSEN512.bmp"));
+    g_textures[Wall].Load(CString("Wall512.bmp"));
+    g_textures[Floor].Load(CString("PAT39.bmp"));
 }
 
 CGLRenderer::~CGLRenderer(void)
 {
+    delete[] g_textures;
 }
 
 bool CGLRenderer::CreateGLContext(CDC* pDC)
@@ -95,6 +116,8 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 
     CreateWall(100);
 
+    PrepareTextures();
+
     SetLightModel();
     SetBulbLight();
 
@@ -118,6 +141,8 @@ void CGLRenderer::DrawScene(CDC *pDC)
         glEnable(GL_LIGHT1);
     else
         glDisable(GL_LIGHT1);
+
+    
     
     if (polygonMode)            // Debug purposes only, activate/deactivate on space
     {
@@ -133,6 +158,23 @@ void CGLRenderer::DrawScene(CDC *pDC)
     DrawWalls();    // Draw the walls
     DrawTable();    // Draw the table
     DrawLamp();     // Draw the lamp
+
+    //glBindTexture(GL_TEXTURE_2D, texId[Wood]);
+    //glBegin(GL_QUADS);
+    //glColor4f(1.f, 1.f, 1.f, 1.f);
+
+    //glTexCoord2i(0.f, 0.f);
+    //glVertex3f(-0.5, -0.5f, -5.f);
+
+    //glTexCoord2i(1.f, 0.f);
+    //glVertex3f(+0.5, -0.5f, -5.f);
+
+    //glTexCoord2i(1.f, 1.f);
+    //glVertex3f(+0.5, +0.5f, -5.f);
+
+    //glTexCoord2i(0.f, 1.f);
+    //glVertex3f(-0.5, +0.5f, -5.f);
+    //glEnd();
     
     SwapBuffers(pDC->m_hDC);    // Swap the back buffer onto the screen
     //---------------------------------
@@ -323,6 +365,7 @@ void CGLRenderer::DrawBox(double a, double b, double c)
         indices[i].d = i * 4 + 3;
     }
 
+    
     glBegin(GL_QUADS);
     for (int i = 0; i < 6; i++)
     {
@@ -360,12 +403,27 @@ void CGLRenderer::DrawTessQuad(double a, double b, int factor)
     for (int i = 0; i < factor; i++)
         for (int j = 0; j < factor; j++)
         {
+            float texS = float(j + 1) / (factor + 1);
+            float texT = 1.f - float(i) / (factor + 1);
+            glTexCoord2f(texS, texT);
             glNormal3fv((const GLfloat*)&normal);
             glVertex3fv((const GLfloat*)&quad[i * (factor + 1) + j + 1]);
+
+            texS = float(j) / (factor + 1);
+            texT = 1.f - float(i) / (factor + 1);
+            glTexCoord2f(texS, texT);
             glNormal3fv((const GLfloat*)&normal);
             glVertex3fv((const GLfloat*)&quad[i * (factor + 1) + j]);
+
+            texS = float(j) / (factor + 1);
+            texT = 1.f - float(i + 1) / (factor + 1);
+            glTexCoord2f(texS, texT);
             glNormal3fv((const GLfloat*)&normal);
             glVertex3fv((const GLfloat*)&quad[(i + 1) * (factor + 1) + j]);
+
+            texS = float(j + 1) / (factor + 1);
+            texT = 1.f - float(i + 1) / (factor + 1);
+            glTexCoord2f(texS, texT);
             glNormal3fv((const GLfloat*)&normal);
             glVertex3fv((const GLfloat*)&quad[(i + 1) * (factor + 1) + j + 1]);
         }
@@ -392,14 +450,29 @@ void CGLRenderer::DrawWall(double a)
     for (int i = 0; i < tessFactor; i++)
         for (int j = 0; j < tessFactor; j++)
         {
+            float texS = float(j + 1) / tessFactor   * texelDensity;
+            float texT = 1.f - float(i) / tessFactor * texelDensity;
+            glTexCoord2f(texS, texT);
             glNormal3fv(normal);
             glVertex3fv((const GLfloat*)&wall[i][j + 1]);
+
+            texS = float(j) / tessFactor       * texelDensity;
+            texT = 1.f - float(i) / tessFactor * texelDensity;
+            glTexCoord2f(texS, texT);
             glNormal3fv(normal);
             glVertex3fv((const GLfloat*)&wall[i][j]);
+
+            texS = float(j) / tessFactor          * texelDensity;
+            texT = 1.f - float(i + 1) / tessFactor * texelDensity;
+            glTexCoord2f(texS, texT);
             glNormal3fv(normal);
             glVertex3fv((const GLfloat*)&wall[i + 1][j]);
+
+            texS = float(j + 1) / tessFactor       * texelDensity;
+            texT = 1.f - float(i + 1) / tessFactor * texelDensity;
+            glTexCoord2f(texS, texT);
             glNormal3fv(normal);
-            glVertex3fv((const GLfloat*)&wall[i + 1][j+1]);
+            glVertex3fv((const GLfloat*)&wall[i + 1][j + 1]);
         }
     glEnd();
 }
@@ -407,6 +480,8 @@ void CGLRenderer::DrawWall(double a)
 void CGLRenderer::DrawWalls()
 {
     SetWallMaterial();
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texId[Wall]);
     glDisable(GL_CULL_FACE);
     glPushMatrix();                             // Save the current matrix
         glTranslatef(-20.f, 50.f - 12.4f, 30.f); // Rotate, then translate the wall ("left" wall)
@@ -416,13 +491,17 @@ void CGLRenderer::DrawWalls()
         DrawWall(100);
     glPopMatrix();                              // Restore previous matrix state
 
+    glBindTexture(GL_TEXTURE_2D, texId[Floor]);
+    texelDensity = 24.f;
     glPushMatrix();
         glTranslatef(30, -12.4f, 30.f);         // This wall is actually the floor
 
         glColor3f(0.3f, 0.3f, 0.3f);
         DrawWall(100);
     glPopMatrix();
+    texelDensity = 8.f;
 
+    glBindTexture(GL_TEXTURE_2D, texId[Wall]);
     glPushMatrix();
         glTranslatef(30.f, 50.f - 12.4f, -20.f); // This wall is the "back" wall
         glRotatef(90, 1.f, 0.f, 0.f);
@@ -431,6 +510,7 @@ void CGLRenderer::DrawWalls()
         DrawWall(100);
     glPopMatrix();
     glEnable(GL_CULL_FACE);
+    glDisable(GL_TEXTURE_2D);
 }
 
 void CGLRenderer::DrawTable()
@@ -441,8 +521,11 @@ void CGLRenderer::DrawTable()
         glColor3f(0.8f, 0.4f, 0.4f);        // Draw the thin top cover (0, 0, 0) point is practically inside this element
         DrawBox(20, 0.2f, 10);
 
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texId[Wood]);
         glTranslatef(0.f, 0.11f, 0.f);
         DrawTessQuad(20, 10, 50);
+        glDisable(GL_TEXTURE_2D);
     glPopMatrix();
 
     // Bulk of the table
@@ -581,7 +664,7 @@ void CGLRenderer::SetLightModel()
     const GLfloat ambient[4] =  { 0.2f, 0.2f, 0.2f, 1.f };
     const GLfloat diffuse[4] = { 1.f, 1.f, 1.f, 1.f };
     const GLfloat specular[4] = { 1.f, 1.f, 1.f, 1.f };
-    const GLfloat position[4] = { 0.f, 1.f, 0.f, 0.f };
+    const GLfloat position[4] = { 0.5f, 1.f, 0.f, 0.f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
@@ -681,4 +764,42 @@ void CGLRenderer::SetPorcelainMaterial()
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
     glMaterialfv(GL_FRONT, GL_EMISSION, default);
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}
+
+void CGLRenderer::PrepareTextures()
+{
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+    glGenTextures(3, texId);
+
+    GLenum envMode = GL_MODULATE;
+
+    glBindTexture(GL_TEXTURE_2D, texId[Wall]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, envMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, g_textures[Wall].Width(), g_textures[Wall].Height(),
+        0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Wall].GetDIBBits());
+
+    glBindTexture(GL_TEXTURE_2D, texId[Wood]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, envMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, g_textures[Wood].Width(), g_textures[Wood].Height(),
+        0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Wood].GetDIBBits());
+
+    glBindTexture(GL_TEXTURE_2D, texId[Floor]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, envMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, g_textures[Floor].Width(), g_textures[Floor].Height(),
+        0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Floor].GetDIBBits());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

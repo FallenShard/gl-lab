@@ -49,6 +49,8 @@ protected:
     void SetFreeLook(bool enabled);
     void AdjustYawPitch(int x, int y);
 
+    void PrepareTextures();
+
 
     
 };
