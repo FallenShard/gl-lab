@@ -42,12 +42,13 @@ namespace
     float texelDensity = 8.f;
 
 
-    GLuint texId[3];
+    GLuint texId[4];
 
     enum TexId {
         Wood,
         Wall,
-        Floor
+        Floor,
+        Pic
     };
 
     DImage* g_textures = nullptr;
@@ -56,11 +57,12 @@ namespace
 
 CGLRenderer::CGLRenderer(void)
 {
-    g_textures = new DImage[3];
+    g_textures = new DImage[4];
 
     g_textures[Wood].Load(CString("ASHSEN512.bmp"));
     g_textures[Wall].Load(CString("Wall512.bmp"));
     g_textures[Floor].Load(CString("PAT39.bmp"));
+    g_textures[Pic].Load(CString("pic512.bmp"));
 }
 
 CGLRenderer::~CGLRenderer(void)
@@ -155,9 +157,11 @@ void CGLRenderer::DrawScene(CDC *pDC)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // Draw everything normally, as filled polygons
     }
         
+    
     DrawWalls();    // Draw the walls
     DrawTable();    // Draw the table
     DrawLamp();     // Draw the lamp
+    DrawPicture();
 
     //glBindTexture(GL_TEXTURE_2D, texId[Wood]);
     //glBegin(GL_QUADS);
@@ -721,7 +725,7 @@ void CGLRenderer::SetWallMaterial()
     GLfloat default[] = { 0.f, 0.f, 0.f, 1.f };
     GLfloat shininess = 0;
     glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, default);
     glMaterialfv(GL_FRONT, GL_EMISSION, default);
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
@@ -770,7 +774,7 @@ void CGLRenderer::PrepareTextures()
 {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    glGenTextures(3, texId);
+    glGenTextures(4, texId);
 
     GLenum envMode = GL_MODULATE;
 
@@ -801,5 +805,84 @@ void CGLRenderer::PrepareTextures()
     glTexImage2D(GL_TEXTURE_2D, 0, 4, g_textures[Floor].Width(), g_textures[Floor].Height(),
         0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Floor].GetDIBBits());
 
+    glBindTexture(GL_TEXTURE_2D, texId[Pic]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, envMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //glTexImage2D(GL_TEXTURE_2D, 0, 4, g_textures[Pic].Width(), g_textures[Pic].Height(),
+    //    0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Pic].GetDIBBits());
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, g_textures[Pic].Width(), g_textures[Pic].Height(), GL_BGRA_EXT, GL_UNSIGNED_BYTE, g_textures[Pic].GetDIBBits());
+
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void CGLRenderer::DrawPicture()
+{
+    GLfloat ambient[] = { 0.4f, 0.4f, 0.4f, 1.f };
+    GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.f };
+    GLfloat default[] = { 0.f, 0.f, 0.f, 1.f };
+    GLfloat shininess = 0;
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, default);
+    glMaterialfv(GL_FRONT, GL_EMISSION, default);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+
+    glPushMatrix();
+
+    glTranslatef(15.f, 3.f, -19.9f);
+
+    glBegin(GL_QUADS);
+
+    glColor3f(0.f, 0.f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(0.f, 0.16f);
+    glVertex3f(-6.2f, -4.2f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(1.f, 0.16f);
+    glVertex3f(+6.2, -4.2f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(1.f, 0.82f);
+    glVertex3f(+6.2, +4.2f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(0.f, 0.82f);
+    glVertex3f(-6.2, +4.2f, 0.f);
+    glEnd();
+    glPopMatrix();
+    
+    glPushMatrix();
+
+    glTranslatef(15.f, 3.f, -19.8f);
+    glRotatef(180, 0.f, 0.f, 1.f);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texId[Pic]);
+    glBegin(GL_QUADS);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(0.f, 0.16f);
+    glVertex3f(-6.f, -4.f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(1.f, 0.16f);
+    glVertex3f(+6.0, -4.0f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(1.f, 0.82f);
+    glVertex3f(+6.0, +4.0f, 0.f);
+
+    glNormal3f(0.f, 0.f, 1.f);
+    glTexCoord2f(0.f, 0.82f);
+    glVertex3f(-6.0, +4.0f, 0.f);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
 }

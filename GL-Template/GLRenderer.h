@@ -51,6 +51,8 @@ protected:
 
     void PrepareTextures();
 
+    void DrawPicture();
+
 
     
 };
